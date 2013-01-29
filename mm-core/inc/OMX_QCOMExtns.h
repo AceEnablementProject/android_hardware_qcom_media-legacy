@@ -390,6 +390,8 @@ enum OMX_QCOM_EXTN_INDEXTYPE
     OMX_QcomIndexParamVideoPerformanceLevel = 0x7F000026,
 
     OMX_GoogleAndroidIndexPrepareForAdaptivePlayback = 0x7F00002D,
+
+    OMX_QcomIndexParamPictureOrderCountType = 0x7F000054,
 };
 
 /**
@@ -928,6 +930,12 @@ typedef struct QOMX_VUI_BITSTREAM_RESTRICT {
     OMX_VERSIONTYPE nVersion;
     OMX_BOOL bEnable;
 } QOMX_VUI_BITSTREAM_RESTRICT;
+
+typedef struct QOMX_PICTURE_ORDER_COUNT_TYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nType;
+} QOMX_PICTURE_ORDER_COUNT_TYPE;
 
 #ifdef __cplusplus
 }

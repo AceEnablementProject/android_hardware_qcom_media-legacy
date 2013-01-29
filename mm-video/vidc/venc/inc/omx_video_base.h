@@ -543,6 +543,7 @@ public:
   OMX_VIDEO_PARAM_INTRAREFRESHTYPE m_sIntraRefresh;
   OMX_U32 m_sExtraData;
   OMX_U32 m_input_msg_id;
+  QOMX_PICTURE_ORDER_COUNT_TYPE m_sPicureOrderCount;
   // fill this buffer queue
   omx_cmd_queue         m_ftb_q;
   // Command Q for rest of the events

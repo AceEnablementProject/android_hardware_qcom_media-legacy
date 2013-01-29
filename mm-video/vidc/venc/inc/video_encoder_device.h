@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------
-Copyright (c) 2010-2013, The Linux Foundation. All rights reserved.
+Copyright (c) 2010-2013, 2015, The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -153,6 +153,8 @@ private:
   bool venc_set_slice_delivery_mode(OMX_BOOL enable);
   bool venc_set_inband_video_header(OMX_BOOL enable);
   bool venc_set_bitstream_restrict_in_vui(OMX_BOOL enable);
+  bool venc_set_picture_order_count_type(OMX_U32 type);
+
 #ifdef MAX_RES_1080P
   OMX_U32 pmem_free();
   OMX_U32 pmem_allocate(OMX_U32 size, OMX_U32 alignment, OMX_U32 count);
