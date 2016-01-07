@@ -64,10 +64,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gralloc_priv.h>
 #endif
 
-#ifdef _ANDROID_
-#include "DivXDrmDecrypt.h"
-#endif //_ANDROID_
-
 #ifdef USE_EGL_IMAGE_GPU
 #include <EGL/egl.h>
 #include <EGL/eglQCOM.h>
@@ -1475,14 +1471,6 @@ OMX_ERRORTYPE omx_vdec::component_init(OMX_STRING role)
      eCompressionFormat = (OMX_VIDEO_CODINGTYPE)QOMX_VIDEO_CodingDivx;
      codec_type_parse = CODEC_TYPE_DIVX;
      m_frame_parser.init_start_codes (codec_type_parse);
-#ifdef _ANDROID_
-     OMX_ERRORTYPE err = createDivxDrmContext();
-     if( err != OMX_ErrorNone ) {
-         DEBUG_PRINT_ERROR("createDivxDrmContext Failed");
-         eRet = err;
-         goto cleanup;
-     }
-#endif //_ANDROID_
   }
   else if(!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx4",\
          OMX_MAX_STRINGNAME_SIZE))
@@ -1493,14 +1481,6 @@ OMX_ERRORTYPE omx_vdec::component_init(OMX_STRING role)
      eCompressionFormat = (OMX_VIDEO_CODINGTYPE)QOMX_VIDEO_CodingDivx;
      codec_type_parse = CODEC_TYPE_DIVX;
      m_frame_parser.init_start_codes (codec_type_parse);
-#ifdef _ANDROID_
-     OMX_ERRORTYPE err = createDivxDrmContext();
-     if( err != OMX_ErrorNone ) {
-         DEBUG_PRINT_ERROR("createDivxDrmContext Failed");
-         eRet = err;
-         goto cleanup;
-     }
-#endif //_ANDROID_
   }
   else if(!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx",\
          OMX_MAX_STRINGNAME_SIZE))
@@ -1511,14 +1491,6 @@ OMX_ERRORTYPE omx_vdec::component_init(OMX_STRING role)
      eCompressionFormat = (OMX_VIDEO_CODINGTYPE)QOMX_VIDEO_CodingDivx;
      codec_type_parse = CODEC_TYPE_DIVX;
      m_frame_parser.init_start_codes (codec_type_parse);
-#ifdef _ANDROID_
-     OMX_ERRORTYPE err = createDivxDrmContext();
-     if( err != OMX_ErrorNone ) {
-         DEBUG_PRINT_ERROR("createDivxDrmContext Failed");
-         eRet = err;
-         goto cleanup;
-     }
-#endif //_ANDROID_
   }
 #else
   else if((!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx4",\
@@ -1531,15 +1503,6 @@ OMX_ERRORTYPE omx_vdec::component_init(OMX_STRING role)
      eCompressionFormat = (OMX_VIDEO_CODINGTYPE)QOMX_VIDEO_CodingDivx;
      codec_type_parse = CODEC_TYPE_DIVX;
      m_frame_parser.init_start_codes (codec_type_parse);
-
-#ifdef _ANDROID_
-     OMX_ERRORTYPE err = createDivxDrmContext();
-     if( err != OMX_ErrorNone ) {
-         DEBUG_PRINT_ERROR("createDivxDrmContext Failed");
-         eRet = err;
-         goto cleanup;
-     }
-#endif //_ANDROID_
   }
 #endif
   else if(!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.avc",\
@@ -5914,14 +5877,6 @@ OMX_ERRORTYPE  omx_vdec::empty_this_buffer(OMX_IN OMX_HANDLETYPE         hComp,
   }
 
 #ifdef _ANDROID_
-  if(iDivXDrmDecrypt)
-  {
-    OMX_ERRORTYPE drmErr = iDivXDrmDecrypt->Decrypt(buffer);
-    if(drmErr != OMX_ErrorNone) {
-        // this error can be ignored
-        DEBUG_PRINT_LOW("\nERROR:iDivXDrmDecrypt->Decrypt %d", drmErr);
-    }
-  }
   if (perf_flag)
   {
     if (!latency)
@@ -6376,13 +6331,6 @@ RETURN VALUE
 ========================================================================== */
 OMX_ERRORTYPE  omx_vdec::component_deinit(OMX_IN OMX_HANDLETYPE hComp)
 {
-#ifdef _ANDROID_
-    if(iDivXDrmDecrypt)
-    {
-        delete iDivXDrmDecrypt;
-        iDivXDrmDecrypt=NULL;
-    }
-#endif //_ANDROID_
     int i = 0;
     if (OMX_StateLoaded != m_state)
     {
@@ -6392,16 +6340,16 @@ OMX_ERRORTYPE  omx_vdec::component_deinit(OMX_IN OMX_HANDLETYPE hComp)
     }
     else
     {
-      DEBUG_PRINT_HIGH("Playback Ended - PASSED");
+        DEBUG_PRINT_HIGH("Playback Ended - PASSED");
     }
 
     if (secure_mode) {
 #ifdef _ANDROID_
-      sendBroadCastEvent(String16("qualcomm.intent.action.SECURE_END"));
+        sendBroadCastEvent(String16("qualcomm.intent.action.SECURE_END"));
 #endif
-      if (unsecureDisplay(qService::IQService::START) < 0) {
-        DEBUG_PRINT_HIGH("Failed to send message to unsecure display START");
-      }
+        if (unsecureDisplay(qService::IQService::START) < 0) {
+            DEBUG_PRINT_HIGH("Failed to send message to unsecure display START");
+        }
     }
 
     /*Check if the output buffers have to be cleaned up*/
@@ -6450,7 +6398,7 @@ OMX_ERRORTYPE  omx_vdec::component_deinit(OMX_IN OMX_HANDLETYPE hComp)
     if (h264_parser)
     {
         delete h264_parser;
-	h264_parser = NULL;
+        h264_parser = NULL;
     }
 
     if (m_frame_parser.mutils)
@@ -6521,8 +6469,8 @@ OMX_ERRORTYPE  omx_vdec::component_deinit(OMX_IN OMX_HANDLETYPE hComp)
       }
     }
 
-  DEBUG_PRINT_HIGH("omx_vdec::component_deinit() complete");
-  return OMX_ErrorNone;
+    DEBUG_PRINT_HIGH("omx_vdec::component_deinit() complete");
+    return OMX_ErrorNone;
 }
 
 /* ======================================================================
@@ -10087,27 +10035,6 @@ void omx_vdec::vdec_dealloc_h264_mv()
 }
 
 #endif
-
-#ifdef _ANDROID_
-OMX_ERRORTYPE omx_vdec::createDivxDrmContext()
-{
-     OMX_ERRORTYPE err = OMX_ErrorNone;
-     iDivXDrmDecrypt = DivXDrmDecrypt::Create();
-     if (iDivXDrmDecrypt) {
-          OMX_ERRORTYPE err = iDivXDrmDecrypt->Init();
-          if(err!=OMX_ErrorNone) {
-            DEBUG_PRINT_ERROR("\nERROR :iDivXDrmDecrypt->Init %d", err);
-            delete iDivXDrmDecrypt;
-            iDivXDrmDecrypt = NULL;
-          }
-     }
-     else {
-          DEBUG_PRINT_ERROR("\nUnable to Create DIVX DRM");
-          err = OMX_ErrorUndefined;
-     }
-     return err;
-}
-#endif //_ANDROID_
 
 omx_vdec::allocate_color_convert_buf::allocate_color_convert_buf()
 {
