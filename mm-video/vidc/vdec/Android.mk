@@ -78,6 +78,7 @@ libmm-vdec-inc          += $(call project-path-for,qcom-display)/libqdutils
 LOCAL_MODULE                    := libOmxVdec
 LOCAL_MODULE_TAGS               := optional
 LOCAL_CFLAGS                    := $(libOmxVdec-def)
+LOCAL_CLANG                     := false
 LOCAL_C_INCLUDES                += $(libmm-vdec-inc)
 
 LOCAL_SHARED_LIBRARIES  := liblog libutils libbinder libcutils libdl
