@@ -48,6 +48,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "omx_vdec.h"
 #include <fcntl.h>
 #include <limits.h>
+#include <QServiceUtils.h>
 
 #ifndef _ANDROID_
 #include <sys/ioctl.h>
@@ -474,7 +475,7 @@ void *get_omx_component_factory_fn(void)
 #ifdef _ANDROID_
 #ifdef USE_ION
 VideoHeap::VideoHeap(int devicefd, size_t size, void* base,
-                     struct ion_handle *handle, int ionMapfd)
+                     ion_user_handle_t handle, int ionMapfd)
 {
     m_ion_device_fd = devicefd;
     m_ion_handle = handle;
@@ -8076,24 +8077,24 @@ int omx_vdec::alloc_map_ion_memory(OMX_U32 buffer_size,
 
   if(secure_mode) {
     if(external_meta_buffer) {
-      alloc_data->heap_mask = ION_HEAP(ION_CP_MFC_HEAP_ID);
+      alloc_data->heap_id_mask = ION_HEAP(ION_CP_MFC_HEAP_ID);
       alloc_data->flags |= ION_SECURE;
     } else if (external_meta_buffer_iommu) {
-      alloc_data->heap_mask = ION_HEAP(ION_IOMMU_HEAP_ID);
+      alloc_data->heap_id_mask = ION_HEAP(ION_IOMMU_HEAP_ID);
 #ifdef NO_IOMMU
-      alloc_data->heap_mask |= ION_HEAP(MEM_HEAP_ID);
+      alloc_data->heap_id_mask |= ION_HEAP(MEM_HEAP_ID);
 #endif
     } else {
-      alloc_data->heap_mask = ION_HEAP(MEM_HEAP_ID);
+      alloc_data->heap_id_mask = ION_HEAP(MEM_HEAP_ID);
       alloc_data->flags |= ION_SECURE;
     }
   } else {
 #ifdef MAX_RES_720P
-    alloc_data->heap_mask = ION_HEAP(MEM_HEAP_ID);
+    alloc_data->heap_id_mask = ION_HEAP(MEM_HEAP_ID);
 #else
-    alloc_data->heap_mask = (ION_HEAP(ION_IOMMU_HEAP_ID));
+    alloc_data->heap_id_mask = (ION_HEAP(ION_IOMMU_HEAP_ID));
 #ifdef NO_IOMMU
-      alloc_data->heap_mask |= ION_HEAP(MEM_HEAP_ID);
+      alloc_data->heap_id_mask |= ION_HEAP(MEM_HEAP_ID);
 #endif
 #endif
   }
@@ -8115,9 +8116,9 @@ int omx_vdec::alloc_map_ion_memory(OMX_U32 buffer_size,
   }
 
   DEBUG_PRINT_HIGH("ion_alloc: device_fd = %d, len = %d, align = %d, "
-     "flags = 0x%x, heap_mask = 0x%x, handle = %p, fd = %d", fd,
+     "flags = 0x%x, heap_id_mask = 0x%x, handle = %p, fd = %d", fd,
      alloc_data->len, alloc_data->align, alloc_data->flags,
-     alloc_data->heap_mask, fd_data->handle, fd_data->fd);
+     alloc_data->heap_id_mask, fd_data->handle, fd_data->fd);
   pthread_mutex_unlock(&m_vdec_ionlock);
   return fd;
 
@@ -10505,24 +10506,17 @@ bool omx_vdec::allocate_color_convert_buf::get_color_format(OMX_COLOR_FORMATTYPE
 int omx_vdec::secureDisplay(int mode) {
 
     sp<IServiceManager> sm = defaultServiceManager();
-    sp<qService::IQService> displayBinder =
-        interface_cast<qService::IQService>(sm->getService(String16("display.qservice")));
 
-    if (displayBinder != NULL) {
-        pthread_mutex_lock(&m_secure_display_lock);
-        if (m_secure_display == 0) {
-            displayBinder->securing(mode);
-            DEBUG_PRINT_HIGH("secureDisplay: %s",
-                    (mode == qService::IQService::END)?"END":"START");
-        }
-        if (mode == qService::IQService::END) {
-            ++m_secure_display;
-        }
-        pthread_mutex_unlock(&m_secure_display_lock);
+    pthread_mutex_lock(&m_secure_display_lock);
+    if (m_secure_display == 0) {
+        securing(mode);
+        DEBUG_PRINT_HIGH("secureDisplay: %s",
+            (mode == qService::IQService::END)?"END":"START");
     }
-    else {
-        DEBUG_PRINT_ERROR("secureDisplay(%d) display.qservice unavailable", mode);
+    if (mode == qService::IQService::END) {
+        ++m_secure_display;
     }
+    pthread_mutex_unlock(&m_secure_display_lock);
     return 0;
 }
 
@@ -10532,21 +10526,15 @@ int omx_vdec::unsecureDisplay(int mode) {
     }
 
     sp<IServiceManager> sm = defaultServiceManager();
-    sp<qService::IQService> displayBinder =
-        interface_cast<qService::IQService>(sm->getService(String16("display.qservice")));
 
     pthread_mutex_lock(&m_secure_display_lock);
-    if (displayBinder != NULL) {
-        if (m_secure_display == 1) {
-            displayBinder->unsecuring(mode);
-            DEBUG_PRINT_HIGH("unsecureDisplay: %s",
-                (mode == qService::IQService::END)?"END":"START");
-        }
-        if (mode == qService::IQService::END) {
-            --m_secure_display;
-        }
-    } else {
-        DEBUG_PRINT_ERROR("unsecureDisplay(%d) display.qservice unavailable", mode);
+    if (m_secure_display == 1) {
+        unsecuring(mode);
+        DEBUG_PRINT_HIGH("unsecureDisplay: %s",
+            (mode == qService::IQService::END)?"END":"START");
+    }
+    if (mode == qService::IQService::END) {
+        --m_secure_display;
     }
     pthread_mutex_unlock(&m_secure_display_lock);
 
