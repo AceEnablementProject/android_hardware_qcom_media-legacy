@@ -569,9 +569,6 @@ omx_vdec::omx_vdec(): m_state(OMX_StateInvalid),
                       external_meta_buffer(false),
                       external_meta_buffer_iommu(false),
                       current_performance(0)
-#ifdef _ANDROID_
-                    ,iDivXDrmDecrypt(NULL)
-#endif
                     ,m_desc_buffer_ptr(NULL)
                     ,m_extradata(NULL)
                     ,m_pipe_in(-1)
